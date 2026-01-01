@@ -1,5 +1,6 @@
 using DemoEF.Domain.Entities;
 using DemoEF.Domain.Enums.User;
+
 using Microsoft.EntityFrameworkCore;
 
 namespace DemoEF.Infrastructure.Data.Seeders
@@ -39,7 +40,7 @@ namespace DemoEF.Infrastructure.Data.Seeders
                     UserName = "guest1",
                     Email = "guest1@test.com",
                     Password = "123456",
-                    UserRole = UserRole.Guest
+                    UserRole = UserRole.Staff
                 },
                 new User
                 {
@@ -47,7 +48,7 @@ namespace DemoEF.Infrastructure.Data.Seeders
                     UserName = "guest2",
                     Email = "guest2@test.com",
                     Password = "123456",
-                    UserRole = UserRole.Guest
+                    UserRole = UserRole.Staff
                 },
                 new User
                 {
@@ -79,7 +80,7 @@ namespace DemoEF.Infrastructure.Data.Seeders
                     UserName = "guest3",
                     Email = "guest3@test.com",
                     Password = "123456",
-                    UserRole = UserRole.Guest
+                    UserRole = UserRole.Staff
                 },
                 new User
                 {

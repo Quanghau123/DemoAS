@@ -10,6 +10,7 @@ namespace DemoEF.Infrastructure.Data
             : base(options) { }
 
         public DbSet<User> Users { get; set; }
+        public DbSet<RefreshToken> RefreshTokens { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -20,5 +21,5 @@ namespace DemoEF.Infrastructure.Data
     }
 }
 
-// dotnet ef migrations add UpdateUser_Add_IsActive_Field
+// dotnet ef migrations add UpdateRefreshTokenEntity
 // dotnet ef database update

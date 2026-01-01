@@ -1,9 +1,9 @@
 namespace DemoEF.Domain.Enums.User
 {
-	public enum UserRole
-	{
-		Admin,
-		User,
-		Guest
-	}
+    public enum UserRole
+    {
+        Admin,
+        Staff,
+        User
+    }
 }
