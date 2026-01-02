@@ -1,0 +1,23 @@
+[
+  {
+    "Id": 1,
+    "UserName": "admin",
+    "Email": "admin@test.com",
+    "Password": "$2a$11$vJVuPHW80zQ9d1RER/qA8eC6XJ1AN9M5Ie7boyuKUVSjAc1Eai9qO",
+    "UserRole": 0
+  },
+  {
+    "Id": 2,
+    "UserName": "staff",
+    "Email": "staff@test.com",
+    "Password": "$2a$11$vJVuPHW80zQ9d1RER/qA8eC6XJ1AN9M5Ie7boyuKUVSjAc1Eai9qO",
+    "UserRole": 1
+  },
+  {
+    "Id": 3,
+    "UserName": "user",
+    "Email": "user@test.com",
+    "Password": "$2a$11$vJVuPHW80zQ9d1RER/qA8eC6XJ1AN9M5Ie7boyuKUVSjAc1Eai9qO",
+    "UserRole": 2
+  }
+]

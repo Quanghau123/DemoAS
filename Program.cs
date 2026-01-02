@@ -8,6 +8,7 @@ using System.Reflection;
 using DemoEF.Infrastructure.Data;
 using DemoEF.Application.Interfaces;
 using DemoEF.Application.Services;
+using DemoEF.Infrastructure.Data.Seeders;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -48,6 +49,7 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 builder.Services.AddControllers();
 builder.Services.AddScoped<IUserService, UserService>();
 
+//Swagger
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(options =>
 {
@@ -71,8 +73,10 @@ builder.Services.AddSwaggerGen(options =>
                       Ví dụ: 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...'",
         Name = "Authorization",
         In = ParameterLocation.Header,
-        Type = SecuritySchemeType.ApiKey,
-        Scheme = "Bearer"
+        Type = SecuritySchemeType.Http,
+        Scheme = "bearer",
+        BearerFormat = "JWT"
+
     });
 
     options.AddSecurityRequirement(new OpenApiSecurityRequirement()
@@ -108,6 +112,13 @@ if (app.Environment.IsDevelopment())
         options.SwaggerEndpoint("/swagger/v1/swagger.json", "DemoEF API V1");
         options.DocumentTitle = "DemoEF API Documentation";
     });
+}
+
+//Seeder
+using (var scope = app.Services.CreateScope())
+{
+    var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+    await UserDataSeeder.SeedFromJsonAsync(db, "Infrastructure/Data/Seeders/users.json");
 }
 
 app.UseAuthentication();

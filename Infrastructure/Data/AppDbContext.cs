@@ -1,6 +1,6 @@
 using Microsoft.EntityFrameworkCore;
+
 using DemoEF.Domain.Entities;
-using DemoEF.Infrastructure.Data.Seeders;
 
 namespace DemoEF.Infrastructure.Data
 {
@@ -15,8 +15,6 @@ namespace DemoEF.Infrastructure.Data
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
-
-            modelBuilder.SeedUsers();
         }
     }
 }
