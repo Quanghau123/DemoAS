@@ -1,6 +1,6 @@
 using DemoEF.Domain.Enums.User;
 
-namespace DemoEF.Domain.Entities.Requests.User
+namespace DemoEF.Application.DTOs.User
 {
     public class UpdateUserRequest
     {

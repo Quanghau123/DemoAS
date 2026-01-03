@@ -1,6 +1,4 @@
 using DemoEF.Application.DTOs.User;
-using DemoEF.Domain.Entities.Requests.User;
-using DemoEF.Common;
 
 namespace DemoEF.Application.Interfaces
 {

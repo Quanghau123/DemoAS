@@ -2,7 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
 
 using DemoEF.Application.Interfaces;
-using DemoEF.Domain.Entities.Requests.User;
+using DemoEF.Application.DTOs.User;
 using DemoEF.Common;
 
 namespace DemoEF.WebApi.Controllers

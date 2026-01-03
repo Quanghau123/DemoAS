@@ -2,8 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
 
 using DemoEF.Application.Interfaces;
-using DemoEF.Domain.Entities.Requests.User;
-using DemoEF.Application.DTOs.User;
+using DemoEF.Application.DTOs.Auth;
 using DemoEF.Common;
 
 using System.Security.Claims;
@@ -49,7 +48,7 @@ namespace DemoEF.WebApi.Controllers
         [AllowAnonymous]
         public async Task<IActionResult> Login([FromBody] LoginRequest data)
         {
-            var result = await _authService.HandleUserLoginAsync(data.Email, data.Password);
+            var result = await _authService.HandleUserLoginAsync(data);
             return Ok(new ApiResponse<LoginResponseDto>(true, "Login successful.", result));
         }
 

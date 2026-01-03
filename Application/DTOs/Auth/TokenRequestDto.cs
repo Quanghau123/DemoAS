@@ -1,4 +1,4 @@
-namespace DemoEF.Domain.Entities.Requests.User
+namespace DemoEF.Application.DTOs.Auth
 {
     public class TokenRequestDto
     {

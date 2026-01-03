@@ -1,4 +1,4 @@
-using DemoEF.Application.DTOs.User;
+using DemoEF.Application.DTOs.Auth;
 using DemoEF.Application.Interfaces;
 using DemoEF.Domain.Entities;
 using DemoEF.Infrastructure.Data;
@@ -28,17 +28,21 @@ namespace DemoEF.Application.Services
             _configuration = configuration;
         }
 
-        public async Task<LoginResponseDto> HandleUserLoginAsync(string email, string password)
+        public async Task<LoginResponseDto> HandleUserLoginAsync(LoginRequest request)
         {
-            var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == email);
-            if (user == null || !BCrypt.Net.BCrypt.Verify(password, user.Password))
+            var user = await _context.Users
+                .FirstOrDefaultAsync(u => u.Email == request.Email);
+
+            if (user == null ||
+                !BCrypt.Net.BCrypt.Verify(request.Password, user.Password))
                 throw new UnauthorizedAccessException("Invalid email or password.");
 
             if (!user.IsActive)
                 throw new UnauthorizedAccessException("User is inactive.");
 
             var oldTokens = _context.RefreshTokens
-                .Where(t => t.UserId == user.Id && (t.IsRevoked || t.ExpiresAt < DateTime.UtcNow));
+                .Where(t => t.UserId == user.Id &&
+                    (t.IsRevoked || t.ExpiresAt < DateTime.UtcNow));
 
             _context.RefreshTokens.RemoveRange(oldTokens);
 
@@ -59,13 +63,6 @@ namespace DemoEF.Application.Services
             {
                 AccessToken = accessToken,
                 RefreshToken = refreshToken.Token,
-                User = new LoginUserDto
-                {
-                    Id = user.Id,
-                    UserName = user.UserName ?? string.Empty,
-                    Role = user.UserRole.ToString(),
-                    IsActive = user.IsActive
-                }
             };
         }
 

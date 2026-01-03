@@ -11,6 +11,8 @@ using DemoEF.Application.Services;
 using DemoEF.Infrastructure.Data.Seeders;
 using DemoEF.WebApi.Middleware;
 using DemoEF.Infrastructure.Security;
+using DemoEF.Application.Validation.User;
+using FluentValidation;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -53,6 +55,8 @@ builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IJwtTokenService, JwtTokenService>();
 
+//Validation
+builder.Services.AddValidatorsFromAssemblyContaining<CreateUserRequestValidator>();
 
 //Swagger
 builder.Services.AddEndpointsApiExplorer();
