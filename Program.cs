@@ -9,6 +9,8 @@ using DemoEF.Infrastructure.Data;
 using DemoEF.Application.Interfaces;
 using DemoEF.Application.Services;
 using DemoEF.Infrastructure.Data.Seeders;
+using DemoEF.WebApi.Middleware;
+using DemoEF.Infrastructure.Security;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -48,6 +50,9 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 //DI
 builder.Services.AddControllers();
 builder.Services.AddScoped<IUserService, UserService>();
+builder.Services.AddScoped<IAuthService, AuthService>();
+builder.Services.AddScoped<IJwtTokenService, JwtTokenService>();
+
 
 //Swagger
 builder.Services.AddEndpointsApiExplorer();
@@ -121,6 +126,7 @@ using (var scope = app.Services.CreateScope())
     await UserDataSeeder.SeedFromJsonAsync(db, "Infrastructure/Data/Seeders/users.json");
 }
 
+app.UseMiddleware<ErrorHandlingMiddleware>();
 app.UseAuthentication();
 app.UseAuthorization();
 
