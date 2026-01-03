@@ -1,5 +1,4 @@
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Authorization;
 
 using DemoEF.Application.Interfaces;
 using DemoEF.Application.DTOs.Auth;
@@ -45,7 +44,6 @@ namespace DemoEF.WebApi.Controllers
         /// 4. Click "Authorize" để sử dụng các API cần xác thực
         /// </remarks>
         [HttpPost("login")]
-        [AllowAnonymous]
         public async Task<IActionResult> Login([FromBody] LoginRequest data)
         {
             var result = await _authService.HandleUserLoginAsync(data);
@@ -69,7 +67,6 @@ namespace DemoEF.WebApi.Controllers
         /// Sử dụng khi AccessToken hết hạn
         /// </remarks>
         [HttpPost("refresh-token")]
-        [AllowAnonymous]
         public async Task<IActionResult> RefreshToken([FromBody] TokenRequestDto data)
         {
             var result = await _authService.RefreshTokenAsync(data.AccessToken, data.RefreshToken);
@@ -77,7 +74,6 @@ namespace DemoEF.WebApi.Controllers
         }
 
         [HttpPost("logout")]
-        [Authorize]
         public async Task<IActionResult> Logout()
         {
             var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);

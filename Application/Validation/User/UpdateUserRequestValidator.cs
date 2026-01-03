@@ -1,4 +1,5 @@
 using FluentValidation;
+
 using DemoEF.Application.DTOs.User;
 
 namespace DemoEF.Application.Validation.User

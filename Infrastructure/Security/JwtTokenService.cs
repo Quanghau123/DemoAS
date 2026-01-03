@@ -18,21 +18,30 @@ namespace DemoEF.Infrastructure.Security
             _configuration = configuration;
         }
 
-        public string GenerateAccessToken(User user)
+        public string GenerateAccessToken(User user, IEnumerable<string> permissions)
         {
             var handler = new JwtSecurityTokenHandler();
             var key = Encoding.UTF8.GetBytes(_configuration["Jwt:Key"]!);
 
+            var claims = new List<Claim>
+            {
+                new Claim(JwtRegisteredClaimNames.Sub, user.Id.ToString()),
+                new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
+                new Claim(ClaimTypes.Name, user.UserName ?? string.Empty),
+                new Claim(ClaimTypes.Role, user.UserRole.ToString())
+            };
+
+            foreach (var permission in permissions)
+            {
+                claims.Add(new Claim("permission", permission));
+            }
+
             var tokenDescriptor = new SecurityTokenDescriptor
             {
-                Subject = new ClaimsIdentity(new[]
-                {
-                    new Claim(JwtRegisteredClaimNames.Sub, user.Id.ToString()),
-                    new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
-                    new Claim(ClaimTypes.Name, user.UserName ?? string.Empty),
-                    new Claim(ClaimTypes.Role, user.UserRole.ToString())
-                }),
-                Expires = DateTime.UtcNow.AddMinutes(double.Parse(_configuration["Jwt:ExpireMinutes"]!)),
+                Subject = new ClaimsIdentity(claims),
+                Expires = DateTime.UtcNow.AddMinutes(
+                    double.Parse(_configuration["Jwt:ExpireMinutes"]!)
+                ),
                 Issuer = _configuration["Jwt:Issuer"],
                 Audience = _configuration["Jwt:Audience"],
                 SigningCredentials = new SigningCredentials(
@@ -41,8 +50,7 @@ namespace DemoEF.Infrastructure.Security
                 )
             };
 
-            var token = handler.CreateToken(tokenDescriptor);
-            return handler.WriteToken(token);
+            return handler.WriteToken(handler.CreateToken(tokenDescriptor));
         }
 
         public ClaimsPrincipal GetPrincipalFromToken(string token, bool validateLifetime = true)

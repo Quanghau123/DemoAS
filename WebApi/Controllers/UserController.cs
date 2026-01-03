@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Authorization;
 using DemoEF.Application.Interfaces;
 using DemoEF.Application.DTOs.User;
 using DemoEF.Common;
+using DemoEF.Common.Authorization;
 
 namespace DemoEF.WebApi.Controllers
 {
@@ -40,7 +41,7 @@ namespace DemoEF.WebApi.Controllers
         /// UserRole có thể là: Admin, Staff, User (mặc định là User)
         /// </remarks>
         [HttpPost("register")]
-        [AllowAnonymous]
+        [Authorize(Policy = Permissions.User_Create)]
         public async Task<IActionResult> Register([FromBody] CreateUserRequest data)
         {
             var result = await _userService.CreateNewUserAsync(data);
@@ -48,7 +49,7 @@ namespace DemoEF.WebApi.Controllers
         }
 
         [HttpGet("users")]
-        [Authorize(Roles = "Admin,Staff")]
+        [Authorize(Policy = Permissions.User_View)]
         public async Task<IActionResult> GetAllUsers()
         {
             var users = await _userService.GetAllUsersAsync();
@@ -77,7 +78,7 @@ namespace DemoEF.WebApi.Controllers
         /// UserRole enum: 0 = Admin, 1 = Staff, 2 = User
         /// </remarks>
         [HttpPut("users/{userId}")]
-        [Authorize(Roles = "Admin")]
+        [Authorize(Policy = Permissions.User_Update)]
         public async Task<IActionResult> UpdateUser(int userId, [FromBody] UpdateUserRequest data)
         {
             var result = await _userService.HandleUpdateUserAsync(userId, data);
@@ -93,7 +94,7 @@ namespace DemoEF.WebApi.Controllers
         /// **Yêu cầu:** Phải đăng nhập với role **Admin**
         /// </remarks>
         [HttpDelete("users/{userId}")]
-        [Authorize(Roles = "Admin")]
+        [Authorize(Policy = Permissions.User_Delete)]
         public async Task<IActionResult> DeleteUser(int userId)
         {
             var result = await _userService.HandleDeleteUserAsync(userId);

@@ -1,9 +1,10 @@
 using System.Text;
+using System.Reflection;
 
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi.Models;
-using System.Reflection;
+using Microsoft.AspNetCore.Authorization;
 
 using DemoEF.Infrastructure.Data;
 using DemoEF.Application.Interfaces;
@@ -12,6 +13,8 @@ using DemoEF.Infrastructure.Data.Seeders;
 using DemoEF.WebApi.Middleware;
 using DemoEF.Infrastructure.Security;
 using DemoEF.Application.Validation.User;
+using DemoEF.Common.Authorization;
+
 using FluentValidation;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -40,9 +43,11 @@ builder.Services.AddAuthentication("Bearer")
 //Authorization Policy
 builder.Services.AddAuthorization(options =>
 {
-    options.AddPolicy("AdminOnly", policy => policy.RequireRole("Admin"));
-    options.AddPolicy("StaffOrAbove", policy => policy.RequireRole("Admin", "Staff"));
-    options.AddPolicy("AllUsers", policy => policy.RequireRole("Admin", "Staff", "User"));
+    foreach (var permission in Permissions.All)
+    {
+        options.AddPolicy(permission, policy =>
+            policy.Requirements.Add(new PermissionRequirement(permission)));
+    }
 });
 
 //DI DbContext
@@ -54,6 +59,8 @@ builder.Services.AddControllers();
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IJwtTokenService, JwtTokenService>();
+builder.Services.AddScoped<IPermissionService, PermissionService>();
+builder.Services.AddSingleton<IAuthorizationHandler, PermissionHandler>();
 
 //Validation
 builder.Services.AddValidatorsFromAssemblyContaining<CreateUserRequestValidator>();
@@ -128,6 +135,7 @@ using (var scope = app.Services.CreateScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
     await UserDataSeeder.SeedFromJsonAsync(db, "Infrastructure/Data/Seeders/users.json");
+    await PermissionSeeder.SeedAsync(db);
 }
 
 app.UseMiddleware<ErrorHandlingMiddleware>();

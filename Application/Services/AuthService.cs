@@ -17,15 +17,18 @@ namespace DemoEF.Application.Services
         private readonly AppDbContext _context;
         private readonly IJwtTokenService _jwtTokenService;
         private readonly IConfiguration _configuration;
+        private readonly IPermissionService _permissionService;
 
         public AuthService(
             AppDbContext context,
             IJwtTokenService jwtTokenService,
-            IConfiguration configuration)
+            IConfiguration configuration,
+            IPermissionService permissionService)
         {
             _context = context;
             _jwtTokenService = jwtTokenService;
             _configuration = configuration;
+            _permissionService = permissionService;
         }
 
         public async Task<LoginResponseDto> HandleUserLoginAsync(LoginRequest request)
@@ -46,7 +49,8 @@ namespace DemoEF.Application.Services
 
             _context.RefreshTokens.RemoveRange(oldTokens);
 
-            var accessToken = _jwtTokenService.GenerateAccessToken(user);
+            var permissions = await _permissionService.GetPermissionsByUserAsync(user.Id);
+            var accessToken = _jwtTokenService.GenerateAccessToken(user, permissions);
 
             var refreshToken = new RefreshToken
             {
