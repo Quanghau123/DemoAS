@@ -9,11 +9,16 @@ namespace DemoEF.Application.Validation.User
         public UpdateUserRequestValidator()
         {
             RuleFor(x => x.UserName)
-                .MaximumLength(100);
+                .MinimumLength(4).When(x => !string.IsNullOrWhiteSpace(x.UserName))
+                .MaximumLength(32).When(x => !string.IsNullOrWhiteSpace(x.UserName))
+                .Matches("^[a-zA-Z0-9_]+$").When(x => !string.IsNullOrWhiteSpace(x.UserName));
 
             RuleFor(x => x.Email)
-                .EmailAddress()
-                .When(x => !string.IsNullOrWhiteSpace(x.Email));
+                .EmailAddress().When(x => !string.IsNullOrWhiteSpace(x.Email));
+
+            RuleFor(x => x.UserRole)
+                .Must(role => !role.HasValue || Enum.IsDefined(typeof(DemoEF.Domain.Enums.User.UserRole), role.Value))
+                .WithMessage("Invalid user role");
         }
     }
 }

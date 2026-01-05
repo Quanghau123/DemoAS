@@ -64,8 +64,16 @@ namespace DemoEF.Application.Services
             if (data.UserName != null)
                 user.UserName = data.UserName.Trim();
 
-            if (data.Email != null)
+            if (!string.IsNullOrWhiteSpace(data.Email) && data.Email.Trim() != user.Email)
+            {
+                var emailExists = await _context.Users
+                    .AnyAsync(u => u.Email == data.Email.Trim() && u.Id != userId);
+
+                if (emailExists)
+                    throw new ConflictException("Another user with this email already exists.");
+
                 user.Email = data.Email.Trim();
+            }
 
             if (data.UserRole.HasValue)
                 user.UserRole = data.UserRole.Value;

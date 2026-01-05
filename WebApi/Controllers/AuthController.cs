@@ -8,11 +8,8 @@ using System.Security.Claims;
 
 namespace DemoEF.WebApi.Controllers
 {
-    /// <summary>
-    /// API quản lý người dùng
-    /// </summary>
     [ApiController]
-    [Route("api/[controller]")]
+    [Route("api/v1/[controller]")]
     public class AuthController : ControllerBase
     {
         private readonly IAuthService _authService;
@@ -22,27 +19,6 @@ namespace DemoEF.WebApi.Controllers
             _authService = authService;
         }
 
-        /// <summary>
-        /// Đăng nhập
-        /// </summary>
-        /// <param name="data">Email và Password</param>
-        /// <returns>AccessToken, RefreshToken và thông tin user</returns>
-        /// <remarks>
-        /// Sample request:
-        ///
-        ///     POST /api/User/login
-        ///     {
-        ///        "email": "quanghau@gmail.com",
-        ///        "password": "Abc@123"
-        ///     }
-        /// 
-        /// admin:
-        /// Sau khi đăng nhập thành công:
-        /// 1. Copy AccessToken
-        /// 2. Click nút "Authorize" ở góc trên bên phải
-        /// 3. Nhập "Bearer {AccessToken}" (có dấu cách sau Bearer)
-        /// 4. Click "Authorize" để sử dụng các API cần xác thực
-        /// </remarks>
         [HttpPost("login")]
         public async Task<IActionResult> Login([FromBody] LoginRequest data)
         {
@@ -50,22 +26,6 @@ namespace DemoEF.WebApi.Controllers
             return Ok(new ApiResponse<LoginResponseDto>(true, "Login successful.", result));
         }
 
-        /// <summary>
-        /// Làm mới AccessToken
-        /// </summary>
-        /// <param name="data">AccessToken cũ và RefreshToken</param>
-        /// <returns>AccessToken và RefreshToken mới</returns>
-        /// <remarks>
-        /// Sample request:
-        ///
-        ///     POST /api/User/refresh-token
-        ///     {
-        ///        "accessToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
-        ///        "refreshToken": "550e8400-e29b-41d4-a716-446655440000"
-        ///     }
-        ///     
-        /// Sử dụng khi AccessToken hết hạn
-        /// </remarks>
         [HttpPost("refresh-token")]
         public async Task<IActionResult> RefreshToken([FromBody] TokenRequestDto data)
         {

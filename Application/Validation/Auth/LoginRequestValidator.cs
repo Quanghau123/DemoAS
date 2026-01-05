@@ -9,11 +9,12 @@ namespace DemoEF.Application.Validation.Auth
         public LoginRequestValidator()
         {
             RuleFor(x => x.Email)
-                .NotEmpty()
-                .EmailAddress();
+                .NotEmpty().WithMessage("Email is required")
+                .EmailAddress().WithMessage("Email is invalid");
 
             RuleFor(x => x.Password)
-                .NotEmpty();
+                .NotEmpty().WithMessage("Password is required")
+                .MinimumLength(6).WithMessage("Password must be at least 6 characters");
         }
     }
 }
