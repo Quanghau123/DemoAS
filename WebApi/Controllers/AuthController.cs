@@ -29,7 +29,7 @@ namespace DemoEF.WebApi.Controllers
         [HttpPost("refresh-token")]
         public async Task<IActionResult> RefreshToken([FromBody] TokenRequestDto data)
         {
-            var result = await _authService.RefreshTokenAsync(data.AccessToken, data.RefreshToken);
+            var result = await _authService.RefreshTokenAsync(data.RefreshToken);
             return Ok(new ApiResponse<TokenResponseDto>(true, "Token refreshed successfully.", result));
         }
 

@@ -18,23 +18,22 @@ namespace DemoEF.Infrastructure.Security
             _configuration = configuration;
         }
 
-        public string GenerateAccessToken(User user, IEnumerable<string> permissions)
+        public string GenerateAccessToken(
+            User user,
+            IEnumerable<string> permissions)
         {
             var handler = new JwtSecurityTokenHandler();
-            var key = Encoding.UTF8.GetBytes(_configuration["Jwt:Key"]!);
+            var key = Encoding.UTF8.GetBytes(
+                _configuration["Jwt:Key"]!);
 
             var claims = new List<Claim>
             {
                 new Claim(JwtRegisteredClaimNames.Sub, user.Id.ToString()),
-                new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
-                new Claim(ClaimTypes.Name, user.UserName ?? string.Empty),
                 new Claim(ClaimTypes.Role, user.UserRole.ToString())
             };
 
             foreach (var permission in permissions)
-            {
                 claims.Add(new Claim("permission", permission));
-            }
 
             var tokenDescriptor = new SecurityTokenDescriptor
             {
@@ -50,24 +49,30 @@ namespace DemoEF.Infrastructure.Security
                 )
             };
 
-            return handler.WriteToken(handler.CreateToken(tokenDescriptor));
+            return handler.WriteToken(
+                handler.CreateToken(tokenDescriptor));
         }
 
-        public ClaimsPrincipal GetPrincipalFromToken(string token, bool validateLifetime = true)
+        public ClaimsPrincipal GetPrincipalFromToken(
+            string token,
+            bool validateLifetime = true)
         {
             var handler = new JwtSecurityTokenHandler();
-            var key = Encoding.UTF8.GetBytes(_configuration["Jwt:Key"]!);
+            var key = Encoding.UTF8.GetBytes(
+                _configuration["Jwt:Key"]!);
 
-            return handler.ValidateToken(token, new TokenValidationParameters
-            {
-                ValidateIssuer = true,
-                ValidateAudience = true,
-                ValidateLifetime = validateLifetime,
-                ValidIssuer = _configuration["Jwt:Issuer"],
-                ValidAudience = _configuration["Jwt:Audience"],
-                IssuerSigningKey = new SymmetricSecurityKey(key),
-                ClockSkew = TimeSpan.Zero
-            }, out _);
+            return handler.ValidateToken(token,
+                new TokenValidationParameters
+                {
+                    ValidateIssuer = true,
+                    ValidateAudience = true,
+                    ValidateLifetime = validateLifetime,
+                    ValidIssuer = _configuration["Jwt:Issuer"],
+                    ValidAudience = _configuration["Jwt:Audience"],
+                    IssuerSigningKey = new SymmetricSecurityKey(key),
+                    ClockSkew = TimeSpan.Zero
+                },
+                out _);
         }
     }
 }
