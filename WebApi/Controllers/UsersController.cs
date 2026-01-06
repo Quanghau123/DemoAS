@@ -50,5 +50,14 @@ namespace DemoEF.WebApi.Controllers
             var result = await _userService.HandleDeleteUserAsync(userId);
             return Ok(new ApiResponse<object>(true, "Delete success.", result));
         }
+
+        [HttpGet("export")]
+        [Authorize(Policy = Permissions.User_Export)]
+        public async Task<IActionResult> ExportUsersToStream([FromQuery] ExportUserRequest request, CancellationToken ct)
+        {
+            var stream = await _userService.ExportUsersToCsvAsync(request, ct);
+            return File(stream, "text/csv", "users.csv");
+        }
+
     }
 }

@@ -3,18 +3,23 @@ using DemoEF.Application.Interfaces;
 using DemoEF.Domain.Entities;
 using DemoEF.Infrastructure.Data;
 using DemoEF.Common.Exceptions;
+using DemoEF.Domain.Enums.User;
 
 using Microsoft.EntityFrameworkCore;
+
+using System.Text;
 
 namespace DemoEF.Application.Services
 {
     public class UserService : IUserService
     {
         private readonly AppDbContext _context;
+        private readonly ILogger<UserService> _logger;
 
-        public UserService(AppDbContext context)
+        public UserService(AppDbContext context, ILogger<UserService> logger)
         {
             _context = context;
+            _logger = logger;
         }
 
         public async Task<object> CreateNewUserAsync(CreateUserRequest data)
@@ -95,6 +100,49 @@ namespace DemoEF.Application.Services
             await _context.SaveChangesAsync();
 
             return new { Message = "User deleted successfully." };
+        }
+
+        public async Task<Stream> ExportUsersToCsvAsync(ExportUserRequest request, CancellationToken ct)
+        {
+            try
+            {
+                var query = _context.Users.AsNoTracking();
+
+                if (request.IsActive.HasValue)
+                    query = query.Where(x => x.IsActive == request.IsActive.Value);
+
+                if (!string.IsNullOrWhiteSpace(request.UserRole) &&
+                    Enum.TryParse<UserRole>(request.UserRole, true, out var role))
+                    query = query.Where(x => x.UserRole == role);
+
+                var users = await query
+                    .OrderBy(x => x.UserName)
+                    .ToListAsync(ct);
+
+                var stream = new MemoryStream();
+                using var writer = new StreamWriter(
+                    stream,
+                    new UTF8Encoding(true),
+                    leaveOpen: true);
+
+                writer.WriteLine("Id;UserName;Email;IsActive;UserRole");
+
+                foreach (var user in users)
+                {
+                    ct.ThrowIfCancellationRequested();
+                    await Task.Delay(500, ct); // để test
+                    writer.WriteLine($"{user.Id};{user.UserName};{user.Email};{user.IsActive};{user.UserRole}");
+                }
+
+                await writer.FlushAsync();
+                stream.Position = 0;
+                return stream;
+            }
+            catch (OperationCanceledException)
+            {
+                _logger.LogInformation("Export users canceled by client");
+                throw;
+            }
         }
     }
 }

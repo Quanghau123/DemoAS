@@ -8,5 +8,6 @@ namespace DemoEF.Application.Interfaces
         Task<List<UserResponseDto>> GetAllUsersAsync();
         Task<object> HandleUpdateUserAsync(int userId, UpdateUserRequest data);
         Task<object> HandleDeleteUserAsync(int userId);
+        Task<Stream> ExportUsersToCsvAsync(ExportUserRequest request, CancellationToken ct);
     }
 }

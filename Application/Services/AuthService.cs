@@ -1,3 +1,5 @@
+using System.Security.Cryptography;
+
 using DemoEF.Application.DTOs.Auth;
 using DemoEF.Application.Interfaces;
 using DemoEF.Domain.Entities;

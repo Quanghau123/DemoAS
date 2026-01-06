@@ -16,7 +16,8 @@ namespace DemoEF.Infrastructure.Data.Seeders
                 new() { Code = Permissions.User_View,   Name = "View user" },
                 new() { Code = Permissions.User_Create, Name = "Create user" },
                 new() { Code = Permissions.User_Update, Name = "Update user" },
-                new() { Code = Permissions.User_Delete, Name = "Delete user" }
+                new() { Code = Permissions.User_Delete, Name = "Delete user" },
+                new() { Code = Permissions.User_Export, Name = "Export user" }
             };
 
             context.Permissions.AddRange(permissions);
@@ -28,6 +29,7 @@ namespace DemoEF.Infrastructure.Data.Seeders
                 new() { Role = UserRole.Admin, PermissionId = permissions[1].Id },
                 new() { Role = UserRole.Admin, PermissionId = permissions[2].Id },
                 new() { Role = UserRole.Admin, PermissionId = permissions[3].Id },
+                new() { Role = UserRole.Admin, PermissionId = permissions[4].Id },
 
                 new() { Role = UserRole.Staff, PermissionId = permissions[0].Id },
                 new() { Role = UserRole.Staff, PermissionId = permissions[2].Id },
