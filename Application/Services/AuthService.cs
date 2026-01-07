@@ -1,9 +1,12 @@
 using System.Security.Cryptography;
+using System.ComponentModel.DataAnnotations;
 
+using DemoEF.Application.Auth;
 using DemoEF.Application.DTOs.Auth;
 using DemoEF.Application.Interfaces;
 using DemoEF.Domain.Entities;
 using DemoEF.Infrastructure.Data;
+using DemoEF.Common.Exceptions;
 
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
@@ -15,15 +18,18 @@ namespace DemoEF.Application.Services
         private readonly AppDbContext _context;
         private readonly IJwtTokenService _jwtTokenService;
         private readonly IPermissionService _permissionService;
+        private readonly IEmailService _emailService;
 
         public AuthService(
             AppDbContext context,
             IJwtTokenService jwtTokenService,
-            IPermissionService permissionService)
+            IPermissionService permissionService,
+            IEmailService emailService)
         {
             _context = context;
             _jwtTokenService = jwtTokenService;
             _permissionService = permissionService;
+            _emailService = emailService;
         }
 
         public async Task<LoginResponseDto> HandleUserLoginAsync(LoginRequest request)
@@ -122,6 +128,104 @@ namespace DemoEF.Application.Services
                 ExpiresAt = DateTime.UtcNow.AddDays(7),
                 IsRevoked = false
             };
+        }
+
+        public async Task SendPasswordResetLinkAsync(string email)
+        {
+            var user = await _context.Users
+                .FirstOrDefaultAsync(u => u.Email == email);
+
+            if (user == null) return;
+
+            var recentToken = await _context.PasswordResetTokens
+                .Where(t => t.UserId == user.Id && t.UsedAt == null)
+                .OrderByDescending(t => t.CreatedAt)
+                .FirstOrDefaultAsync();
+
+            if (recentToken != null &&
+             recentToken.ExpiresAt > DateTime.UtcNow &&
+                recentToken.CreatedAt > DateTime.UtcNow.AddMinutes(-15))
+            {
+                throw new ConflictException(
+                    "Password reset was requested recently. Please check your email.");
+            }
+
+            await _context.PasswordResetTokens
+                .Where(t => t.UserId == user.Id && t.UsedAt == null)
+                .ExecuteUpdateAsync(t =>
+                    t.SetProperty(x => x.UsedAt, DateTime.UtcNow));
+
+            var rawToken = GenerateResetToken();
+            var tokenHash = BCrypt.Net.BCrypt.HashPassword(rawToken);
+
+            var resetToken = new PasswordResetToken
+            {
+                Id = Guid.NewGuid(),
+                UserId = user.Id,
+                TokenHash = tokenHash,
+                CreatedAt = DateTime.UtcNow,
+                ExpiresAt = DateTime.UtcNow.AddHours(2)
+            };
+
+            await _context.PasswordResetTokens.AddAsync(resetToken);
+            await _context.SaveChangesAsync();
+
+            var resetLink =
+                $"http://localhost:3000/reset-password" +
+                $"?userId={user.Id}&token={Uri.EscapeDataString(rawToken)}";
+
+            var emailBody = $@"
+                <p>Hi {user.UserName},</p>
+                <p>Click the link below to reset your password. The link expires in 2 hours.</p>
+                <a href='{resetLink}'>Reset Password</a>
+            ";
+
+            try
+            {
+                await _emailService.SendEmailAsync(
+                    user.Email,
+                    "Password Reset Request",
+                    emailBody);
+            }
+            catch (Exception)
+            {
+                throw new ConflictException(
+                    "Unable to send reset email. Please try again later.");
+            }
+        }
+
+        public async Task ResetPasswordAsync(ResetPasswordRequest request)
+        {
+            var resetToken = await _context.PasswordResetTokens
+                .Include(t => t.User)
+                .FirstOrDefaultAsync(t =>
+                    t.UserId == request.UserId &&
+                    t.UsedAt == null);
+
+            if (resetToken == null)
+                throw new NotFoundException("Reset token not found");
+
+            if (resetToken.ExpiresAt < DateTime.UtcNow)
+                throw new ValidationException("Reset token expired");
+
+            if (!BCrypt.Net.BCrypt.Verify(request.Token, resetToken.TokenHash))
+                throw new ValidationException("Invalid reset token");
+
+            resetToken.User.Password =
+                BCrypt.Net.BCrypt.HashPassword(request.NewPassword);
+
+            resetToken.UsedAt = DateTime.UtcNow;
+
+            await _context.SaveChangesAsync();
+        }
+
+        private static string GenerateResetToken()
+        {
+            var bytes = RandomNumberGenerator.GetBytes(32);
+            return Convert.ToBase64String(bytes)
+                .Replace("+", "-")
+                .Replace("/", "_")
+                .TrimEnd('=');
         }
     }
 }

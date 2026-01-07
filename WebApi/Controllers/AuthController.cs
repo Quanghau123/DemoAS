@@ -5,6 +5,7 @@ using DemoEF.Application.DTOs.Auth;
 using DemoEF.Common;
 
 using System.Security.Claims;
+using DemoEF.Application.Auth;
 
 namespace DemoEF.WebApi.Controllers
 {
@@ -41,6 +42,20 @@ namespace DemoEF.WebApi.Controllers
             await _authService.LogoutAsync(userId);
 
             return Ok(new ApiResponse<object>(true, "Logout successful."));
+        }
+
+        [HttpPost("forgot-password")]
+        public async Task<IActionResult> ForgotPassword([FromBody] ForgotPasswordRequest request)
+        {
+            await _authService.SendPasswordResetLinkAsync(request.Email);
+            return Ok("If the email exists, a reset link has been sent.");
+        }
+
+        [HttpPost("reset-password")]
+        public async Task<IActionResult> ResetPassword([FromBody] ResetPasswordRequest request)
+        {
+            await _authService.ResetPasswordAsync(request);
+            return Ok("Password has been reset successfully.");
         }
     }
 }

@@ -73,6 +73,11 @@ builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IJwtTokenService, JwtTokenService>();
 builder.Services.AddScoped<IPermissionService, PermissionService>();
 builder.Services.AddSingleton<IAuthorizationHandler, PermissionHandler>();
+builder.Services.AddSingleton<IEmailService>(
+    new DemoEF.Application.Services.SmtpEmailService(
+        smtpUser: "l3acasha@gmail.com",
+        smtpPass: "otzk ghzq zezw dznf")
+);
 
 //Swagger
 builder.Services.AddEndpointsApiExplorer();
@@ -93,9 +98,7 @@ builder.Services.AddSwaggerGen(options =>
     // Add JWT Authentication vào Swagger
     options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
     {
-        Description = @"JWT Authorization header sử dụng Bearer scheme. 
-                      Nhập 'Bearer' [space] và sau đó nhập token.
-                      Ví dụ: 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...'",
+        Description = @"JWT Authorization header sử dụng Bearer scheme.'",
         Name = "Authorization",
         In = ParameterLocation.Header,
         Type = SecuritySchemeType.Http,
