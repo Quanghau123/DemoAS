@@ -1,4 +1,7 @@
-public interface IPermissionService
+namespace DemoEF.Application.Interfaces
 {
-    Task<List<string>> GetPermissionsByUserAsync(int userId);
+    public interface IPermissionService
+    {
+        Task<List<string>> GetPermissionsByUserAsync(int userId);
+    }
 }

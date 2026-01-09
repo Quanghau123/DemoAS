@@ -9,7 +9,7 @@ using DemoEF.Common.Authorization;
 namespace DemoEF.WebApi.Controllers
 {
     [ApiController]
-    [Route("api/v1/[controller]")]
+    [Route("api/v1/users")]
     public class UsersController : ControllerBase
     {
         private readonly IUserService _userService;

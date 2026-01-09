@@ -18,11 +18,12 @@ namespace DemoEF.Infrastructure.Security
             _configuration = configuration;
         }
 
-        public string GenerateAccessToken(
-            User user,
+        public string GenerateAccessToken(User user,
+            //IEnumerable để linh hoạt nhận mọi kiểu danh sách (List, mảng, kết quả LINQ) mà không bị phụ thuộc cứng.
             IEnumerable<string> permissions)
         {
             var handler = new JwtSecurityTokenHandler();
+            //HMAC-SHA256 chỉ làm việc với nhị phân
             var key = Encoding.UTF8.GetBytes(
                 _configuration["Jwt:Key"]!);
 
@@ -53,9 +54,7 @@ namespace DemoEF.Infrastructure.Security
                 handler.CreateToken(tokenDescriptor));
         }
 
-        public ClaimsPrincipal GetPrincipalFromToken(
-            string token,
-            bool validateLifetime = true)
+        public ClaimsPrincipal GetPrincipalFromToken(string token, bool validateLifetime = true)
         {
             var handler = new JwtSecurityTokenHandler();
             var key = Encoding.UTF8.GetBytes(

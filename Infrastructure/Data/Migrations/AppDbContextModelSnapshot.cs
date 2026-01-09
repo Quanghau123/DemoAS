@@ -132,6 +132,9 @@ namespace DemoEF.Infrastructure.Data.Migrations
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
+                    b.Property<int>("AuthProvider")
+                        .HasColumnType("integer");
+
                     b.Property<string>("Email")
                         .IsRequired()
                         .HasColumnType("text");
@@ -140,7 +143,9 @@ namespace DemoEF.Infrastructure.Data.Migrations
                         .HasColumnType("boolean");
 
                     b.Property<string>("Password")
-                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("ProviderUserId")
                         .HasColumnType("text");
 
                     b.Property<string>("UserName")

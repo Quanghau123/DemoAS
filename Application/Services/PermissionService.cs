@@ -1,26 +1,30 @@
 using DemoEF.Infrastructure.Data;
+using DemoEF.Application.Interfaces;
 
 using Microsoft.EntityFrameworkCore;
 
-public class PermissionService : IPermissionService
+namespace DemoEF.Application.Services
 {
-    private readonly AppDbContext _context;
-
-    public PermissionService(AppDbContext context)
+    public class PermissionService : IPermissionService
     {
-        _context = context;
-    }
+        private readonly AppDbContext _context;
 
-    public async Task<List<string>> GetPermissionsByUserAsync(int userId)
-    {
-        var role = await _context.Users
-            .Where(u => u.Id == userId)
-            .Select(u => u.UserRole)
-            .FirstAsync();
+        public PermissionService(AppDbContext context)
+        {
+            _context = context;
+        }
 
-        return await _context.RolePermissions
-            .Where(rp => rp.Role == role)
-            .Select(rp => rp.Permission.Code)
-            .ToListAsync();
+        public async Task<List<string>> GetPermissionsByUserAsync(int userId)
+        {
+            var role = await _context.Users
+                .Where(u => u.Id == userId)
+                .Select(u => u.UserRole)
+                .FirstAsync();
+
+            return await _context.RolePermissions
+                .Where(rp => rp.Role == role)
+                .Select(rp => rp.Permission.Code)
+                .ToListAsync();
+        }
     }
 }

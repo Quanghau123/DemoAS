@@ -14,19 +14,24 @@ using DemoEF.WebApi.Middleware;
 using DemoEF.Infrastructure.Security;
 using DemoEF.Application.Validation.User;
 using DemoEF.Common.Authorization;
+using SmtpEmailService = DemoEF.Application.Services.SmtpEmailService;
 
 using FluentValidation;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using System.Security.Claims;
 using FluentValidation.AspNetCore;
+using DemoEF.Infrastructure.Auth;
 
 var builder = WebApplication.CreateBuilder(args);
 
-//JWT
 var jwtSettings = builder.Configuration.GetSection("Jwt");
-
 var key = Encoding.UTF8.GetBytes(jwtSettings["Key"]!);
 
+var smtpSection = builder.Configuration.GetSection("SMTP");
+var smtpUser = smtpSection["User"];
+var smtpPass = smtpSection["Pass"];
+
+//JWT
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
     {
@@ -67,44 +72,51 @@ builder.Services.AddFluentValidationAutoValidation();
 builder.Services.AddFluentValidationClientsideAdapters();
 builder.Services.AddValidatorsFromAssemblyContaining<CreateUserRequestValidator>();
 
+//OAuth Options
+builder.Services.Configure<GoogleOAuthOptions>(
+    builder.Configuration.GetSection("Google"));
+
+builder.Services.Configure<FacebookOAuthOptions>(
+    builder.Configuration.GetSection("Facebook"));
+
+//DI Seeders
+builder.Services.AddScoped<ISeeder, UserDataSeeder>();
+builder.Services.AddScoped<ISeeder, PermissionSeeder>();
+builder.Services.AddScoped<DatabaseSeeder>();
+
 //DI Services
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IJwtTokenService, JwtTokenService>();
 builder.Services.AddScoped<IPermissionService, PermissionService>();
 builder.Services.AddSingleton<IAuthorizationHandler, PermissionHandler>();
+builder.Services.AddScoped<IAuthTokenService, AuthTokenService>();
 builder.Services.AddSingleton<IEmailService>(
-    new DemoEF.Application.Services.SmtpEmailService(
-        smtpUser: "l3acasha@gmail.com",
-        smtpPass: "otzk ghzq zezw dznf")
+    new SmtpEmailService(
+        smtpUser: smtpUser!,
+        smtpPass: smtpPass!
+    )
 );
+
+//DI OAuth Clients
+builder.Services.AddHttpClient();
+builder.Services.AddScoped<IGoogleOAuthClient, GoogleOAuthClient>();
+builder.Services.AddScoped<IFacebookOAuthClient, FacebookOAuthClient>();
+builder.Services.AddScoped<IOAuthService, OAuthService>();
 
 //Swagger
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(options =>
 {
-    options.SwaggerDoc("v1", new OpenApiInfo
-    {
-        Version = "v1",
-        Title = "DemoEF API",
-        Description = "API quản lý người dùng với JWT Authentication và phân quyền theo Role (Admin, Staff, User)",
-        Contact = new OpenApiContact
-        {
-            Name = "Support Team",
-            Email = "support@example.com"
-        }
-    });
-
     // Add JWT Authentication vào Swagger
-    options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
+    options.AddSecurityDefinition(JwtBearerDefaults.AuthenticationScheme, new OpenApiSecurityScheme
     {
         Description = @"JWT Authorization header sử dụng Bearer scheme.'",
         Name = "Authorization",
         In = ParameterLocation.Header,
         Type = SecuritySchemeType.Http,
-        Scheme = "bearer",
+        Scheme = JwtBearerDefaults.AuthenticationScheme,
         BearerFormat = "JWT"
-
     });
 
     options.AddSecurityRequirement(new OpenApiSecurityRequirement()
@@ -146,8 +158,8 @@ if (app.Environment.IsDevelopment())
 using (var scope = app.Services.CreateScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-    await UserDataSeeder.SeedFromJsonAsync(db, "Infrastructure/Data/Seeders/users.json");
-    await PermissionSeeder.SeedAsync(db);
+    var databaseSeeder = scope.ServiceProvider.GetRequiredService<DatabaseSeeder>();
+    await databaseSeeder.SeedAsync(db);
 }
 
 app.UseMiddleware<ErrorHandlingMiddleware>();

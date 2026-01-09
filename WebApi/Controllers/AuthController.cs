@@ -10,7 +10,7 @@ using DemoEF.Application.Auth;
 namespace DemoEF.WebApi.Controllers
 {
     [ApiController]
-    [Route("api/v1/[controller]")]
+    [Route("api/v1/auth")]
     public class AuthController : ControllerBase
     {
         private readonly IAuthService _authService;
@@ -48,14 +48,14 @@ namespace DemoEF.WebApi.Controllers
         public async Task<IActionResult> ForgotPassword([FromBody] ForgotPasswordRequest request)
         {
             await _authService.SendPasswordResetLinkAsync(request.Email);
-            return Ok("If the email exists, a reset link has been sent.");
+            return Ok(new ApiResponse<object>(true, "If the email exists, a reset link has been sent."));
         }
 
         [HttpPost("reset-password")]
         public async Task<IActionResult> ResetPassword([FromBody] ResetPasswordRequest request)
         {
             await _authService.ResetPasswordAsync(request);
-            return Ok("Password has been reset successfully.");
+            return Ok(new ApiResponse<object>(true, "Password has been reset successfully."));
         }
     }
 }

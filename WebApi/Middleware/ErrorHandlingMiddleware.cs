@@ -17,6 +17,11 @@ namespace DemoEF.WebApi.Middleware
             {
                 await _next(context);
             }
+            catch (OperationCanceledException)
+            {
+                context.Response.StatusCode = (int)HttpStatusCode.RequestTimeout;
+                await context.Response.WriteAsJsonAsync(new ApiResponse<object>(false, "Request was cancelled"));
+            }
             catch (UnauthorizedAccessException ex)
             {
                 context.Response.StatusCode = (int)HttpStatusCode.Unauthorized;

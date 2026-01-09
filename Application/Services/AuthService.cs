@@ -19,56 +19,36 @@ namespace DemoEF.Application.Services
         private readonly IJwtTokenService _jwtTokenService;
         private readonly IPermissionService _permissionService;
         private readonly IEmailService _emailService;
+        private readonly IAuthTokenService _authTokenService;
 
         public AuthService(
             AppDbContext context,
             IJwtTokenService jwtTokenService,
             IPermissionService permissionService,
-            IEmailService emailService)
+            IEmailService emailService,
+            IAuthTokenService authTokenService)
         {
             _context = context;
             _jwtTokenService = jwtTokenService;
             _permissionService = permissionService;
             _emailService = emailService;
+            _authTokenService = authTokenService;
         }
 
         public async Task<LoginResponseDto> HandleUserLoginAsync(LoginRequest request)
         {
             var user = await _context.Users
-                .FirstOrDefaultAsync(x => x.Email == request.Email);
+            .FirstOrDefaultAsync(x => x.Email == request.Email);
 
             if (user == null ||
-                !BCrypt.Net.BCrypt.Verify(request.Password, user.Password))
+            !BCrypt.Net.BCrypt.Verify(request.Password, user.Password))
                 throw new UnauthorizedAccessException("Invalid email or password");
 
             if (!user.IsActive)
                 throw new UnauthorizedAccessException("User is inactive");
 
-            var oldTokens = await _context.RefreshTokens
-                .Where(x => x.UserId == user.Id && !x.IsRevoked)
-                .ToListAsync();
-
-            foreach (var token in oldTokens)
-                token.IsRevoked = true;
-
-            var permissions =
-                await _permissionService.GetPermissionsByUserAsync(user.Id);
-
-            var accessToken =
-                _jwtTokenService.GenerateAccessToken(user, permissions);
-
-            var refreshToken = CreateRefreshToken(user.Id);
-
-            await _context.RefreshTokens.AddAsync(refreshToken);
-            await _context.SaveChangesAsync();
-
-            return new LoginResponseDto
-            {
-                AccessToken = accessToken,
-                RefreshToken = refreshToken.Token
-            };
+            return await _authTokenService.IssueTokenAsync(user);
         }
-
         public async Task<TokenResponseDto> RefreshTokenAsync(string refreshToken)
         {
             var dbToken = await _context.RefreshTokens
@@ -105,7 +85,6 @@ namespace DemoEF.Application.Services
                 RefreshToken = newRefreshToken.Token
             };
         }
-
         public async Task LogoutAsync(int userId)
         {
             var tokens = await _context.RefreshTokens
@@ -117,7 +96,6 @@ namespace DemoEF.Application.Services
 
             await _context.SaveChangesAsync();
         }
-
         private static RefreshToken CreateRefreshToken(int userId)
         {
             return new RefreshToken
@@ -137,6 +115,7 @@ namespace DemoEF.Application.Services
 
             if (user == null) return;
 
+            //chống spam gửi mail
             var recentToken = await _context.PasswordResetTokens
                 .Where(t => t.UserId == user.Id && t.UsedAt == null)
                 .OrderByDescending(t => t.CreatedAt)
@@ -152,6 +131,7 @@ namespace DemoEF.Application.Services
 
             await _context.PasswordResetTokens
                 .Where(t => t.UserId == user.Id && t.UsedAt == null)
+                // Cập nhật hàng loạt (bulk update) trực tiếp trên database mà không cần load các entity về bộ nhớ.
                 .ExecuteUpdateAsync(t =>
                     t.SetProperty(x => x.UsedAt, DateTime.UtcNow));
 

@@ -1,12 +1,13 @@
 using DemoEF.Common.Authorization;
 using DemoEF.Domain.Entities;
 using DemoEF.Domain.Enums.User;
+using DemoEF.Application.Interfaces;
 
 namespace DemoEF.Infrastructure.Data.Seeders
 {
-    public static class PermissionSeeder
+    public class PermissionSeeder : ISeeder
     {
-        public static async Task SeedAsync(AppDbContext context)
+        public async Task SeedAsync(AppDbContext context)
         {
             if (context.Permissions.Any())
                 return;
