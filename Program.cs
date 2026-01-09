@@ -100,8 +100,8 @@ builder.Services.AddSingleton<IEmailService>(
 
 //DI OAuth Clients
 builder.Services.AddHttpClient();
-builder.Services.AddScoped<IGoogleOAuthClient, GoogleOAuthClient>();
-builder.Services.AddScoped<IFacebookOAuthClient, FacebookOAuthClient>();
+builder.Services.AddScoped<IOAuthClient, GoogleOAuthClient>();
+builder.Services.AddScoped<IOAuthClient, FacebookOAuthClient>();
 builder.Services.AddScoped<IOAuthService, OAuthService>();
 
 //Swagger

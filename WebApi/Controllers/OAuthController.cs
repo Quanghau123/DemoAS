@@ -10,31 +10,50 @@ namespace DemoEF.WebApi.Controllers
     {
         private readonly IOAuthService _oauthService;
         private readonly IConfiguration _configuration;
-        public OAuthController(IOAuthService oauthService, IConfiguration configuration)
+
+        public OAuthController(
+            IOAuthService oauthService,
+            IConfiguration configuration)
         {
             _oauthService = oauthService;
             _configuration = configuration;
         }
 
-        /// <summary>
-        /// Redirect người dùng sang Google để đăng nhập OAuth2.
-        /// </summary>
-        /// <remarks>
-        /// Với Swagger UI sẽ cố gắng fetch kết quả JSON để hiển thị response.
-        /// Nhưng endpoint này không trả JSON, mà Redirect (HTTP 302) sang Google.
-        /// Test bằng Browser sẽ đúng hơn.
-        /// </remarks>
-        [HttpGet("google/login")]
-        public IActionResult GoogleLogin()
+        [HttpGet("{provider}/login")]
+        public IActionResult Login(string provider)
+        {
+            provider = provider.ToLower();
+
+            string url = provider switch
+            {
+                "google" => BuildGoogleLoginUrl(),
+                "facebook" => BuildFacebookLoginUrl(),
+                _ => throw new NotSupportedException("Provider not supported")
+            };
+
+            return Redirect(url);
+        }
+
+        [HttpGet("{provider}/callback")]
+        public async Task<IActionResult> Callback(
+            string provider,
+            [FromQuery] string code)
+        {
+            var result = await _oauthService.LoginAsync(provider, code);
+            return Ok(result);
+        }
+
+        private string BuildGoogleLoginUrl()
         {
             var clientId = _configuration["Google:ClientId"];
             var redirectUri = _configuration["Google:RedirectUri"];
-            if (string.IsNullOrEmpty(redirectUri))
+
+            if (string.IsNullOrEmpty(clientId) || string.IsNullOrEmpty(redirectUri))
             {
-                return BadRequest("Google redirect URI is not configured.");
+                throw new Exception("Google OAuth configuration is missing.");
             }
 
-            var url =
+            return
                 "https://accounts.google.com/o/oauth2/v2/auth" +
                 "?client_id=" + clientId +
                 "&redirect_uri=" + Uri.EscapeDataString(redirectUri) +
@@ -42,44 +61,24 @@ namespace DemoEF.WebApi.Controllers
                 "&scope=openid%20email%20profile" +
                 "&access_type=offline" +
                 "&prompt=consent";
-
-            return Redirect(url);
         }
 
-        [HttpGet("google/callback")]
-        public async Task<IActionResult> GoogleCallback(string code)
-        {
-            var result = await _oauthService.LoginWithGoogleAsync(code);
-            return Ok(result);
-        }
-
-        [HttpGet("facebook/login")]
-        public IActionResult FacebookLogin()
+        private string BuildFacebookLoginUrl()
         {
             var clientId = _configuration["Facebook:ClientId"];
             var redirectUri = _configuration["Facebook:RedirectUri"];
-            if (string.IsNullOrEmpty(redirectUri))
+
+            if (string.IsNullOrEmpty(clientId) || string.IsNullOrEmpty(redirectUri))
             {
-                return BadRequest("Facebook redirect URI is not configured.");
+                throw new Exception("Facebook OAuth configuration is missing.");
             }
-            // var state = Guid.NewGuid().ToString();
 
-            var url = $"https://www.facebook.com/v18.0/dialog/oauth" +
-                    $"?client_id={clientId}" +
-                    $"&redirect_uri={Uri.EscapeDataString(redirectUri)}" +
-                    // $"&state={state}" +
-                    // $"&scope=email,public_profile";
-                    $"&response_type=code" +
-                    $"&scope=public_profile";
-
-            return Redirect(url);
-        }
-
-        [HttpGet("facebook/callback")]
-        public async Task<IActionResult> FacebookCallback(string code)
-        {
-            var result = await _oauthService.LoginWithFacebookAsync(code);
-            return Ok(result);
+            return
+                "https://www.facebook.com/v18.0/dialog/oauth" +
+                "?client_id=" + clientId +
+                "&redirect_uri=" + Uri.EscapeDataString(redirectUri) +
+                "&response_type=code" +
+                "&scope=public_profile";
         }
     }
 }

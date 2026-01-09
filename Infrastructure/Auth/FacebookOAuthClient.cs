@@ -8,8 +8,9 @@ using Microsoft.Extensions.Options;
 
 namespace DemoEF.Infrastructure.Auth
 {
-    public class FacebookOAuthClient : IFacebookOAuthClient
+    public class FacebookOAuthClient : IOAuthClient
     {
+        public string ProviderName => "facebook";
         private readonly HttpClient _httpClient;
         private readonly FacebookOAuthOptions _options;
 

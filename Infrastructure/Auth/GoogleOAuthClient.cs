@@ -9,8 +9,9 @@ using Microsoft.Extensions.Options;
 
 namespace DemoEF.Infrastructure.Auth
 {
-    public class GoogleOAuthClient : IGoogleOAuthClient
+    public class GoogleOAuthClient : IOAuthClient
     {
+        public string ProviderName => "google";
         private readonly HttpClient _httpClient;
         private readonly GoogleOAuthOptions _options;
 

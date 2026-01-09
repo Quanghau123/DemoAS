@@ -12,29 +12,24 @@ namespace DemoEF.Application.Services
     {
         private readonly AppDbContext _context;
         private readonly IAuthTokenService _authTokenService;
-        private readonly IGoogleOAuthClient _googleOAuthClient;
-        private readonly IFacebookOAuthClient _facebookOAuthClient;
+        private readonly Dictionary<string, IOAuthClient> _clients;
 
         public OAuthService(
             AppDbContext context,
             IAuthTokenService authTokenService,
-            IGoogleOAuthClient googleOAuthClient,
-            IFacebookOAuthClient facebookOAuthClient)
+            IEnumerable<IOAuthClient> clients)
         {
             _context = context;
             _authTokenService = authTokenService;
-            _googleOAuthClient = googleOAuthClient;
-            _facebookOAuthClient = facebookOAuthClient;
-        }
-        public async Task<LoginResponseDto> LoginWithGoogleAsync(string code)
-        {
-            var userInfo = await _googleOAuthClient.GetUserInfoAsync(code);
-            return await HandleOAuthUserAsync(userInfo);
+            _clients = clients.ToDictionary(c => c.ProviderName, StringComparer.OrdinalIgnoreCase);
         }
 
-        public async Task<LoginResponseDto> LoginWithFacebookAsync(string code)
+        public async Task<LoginResponseDto> LoginAsync(string provider, string code)
         {
-            var userInfo = await _facebookOAuthClient.GetUserInfoAsync(code);
+            if (!_clients.TryGetValue(provider, out var client))
+                throw new Exception("Provider not supported");
+
+            var userInfo = await client.GetUserInfoAsync(code);
             return await HandleOAuthUserAsync(userInfo);
         }
 

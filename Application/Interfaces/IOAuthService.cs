@@ -4,7 +4,6 @@ namespace DemoEF.Application.Interfaces
 {
     public interface IOAuthService
     {
-        Task<LoginResponseDto> LoginWithGoogleAsync(string code);
-        Task<LoginResponseDto> LoginWithFacebookAsync(string code);
+        Task<LoginResponseDto> LoginAsync(string provider, string code);
     }
 }
